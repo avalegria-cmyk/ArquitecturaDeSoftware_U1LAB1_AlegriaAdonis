@@ -1,0 +1,24 @@
+# Entornos y dependencias locales
+venv/
+.venv/
+node_modules/
+
+# Archivos generados
+__pycache__/
+*.py[cod]
+frontend/dist/
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Configuración local
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Modelos generados: entrenar desde la aplicación
+*.joblib
+processing/storage/*
+!processing/storage/.gitkeep

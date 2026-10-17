@@ -1,4 +1,6 @@
+# Python 3.11 o 3.12. Instalar en un entorno virtual del proyecto.
 Flask==3.1.0
 pandas==2.2.3
 numpy==2.1.3
 scikit-learn==1.5.2
+joblib==1.4.2

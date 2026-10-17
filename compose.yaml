@@ -1,0 +1,80 @@
+name: weatherml
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    init: true
+    ports:
+      - "127.0.0.1:5173:5173"
+    environment:
+      API_URL: http://backend:8000
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - frontend_dependencies:/app/node_modules
+      - npm_cache:/root/.npm
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - presentation
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    init: true
+    environment:
+      PROCESSING_URL: http://processing:5001
+    volumes:
+      - ./backend:/app/backend:ro
+    expose:
+      - "8000"
+    depends_on:
+      processing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8000) ? 0 : 1);"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - presentation
+      - processing
+
+  processing:
+    build:
+      context: .
+      dockerfile: docker/processing/Dockerfile
+    init: true
+    environment:
+      WEATHER_MODEL_PATH: /data/weather_model.joblib
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./processing:/app/processing:ro
+      - ./app.py:/app/app.py:ro
+      - model_data:/data
+    expose:
+      - "5001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 5001), timeout=2).close()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    networks:
+      - processing
+
+volumes:
+  frontend_dependencies:
+  npm_cache:
+  model_data:
+
+networks:
+  presentation:
+  processing:
+    internal: true
